@@ -75,17 +75,20 @@
             var contentPath = ToolboxUpdater.GetApplicationContentPath();
             var cubeDefinitions = SpaceEngineersCore.Resources.CubeBlockDefinitions.Where(c => c.CubeSize == cubeSize);
 
-            // Fixes "System.OverflowException: 'TimeSpan overflowed because the duration is too long.'"
-            var _Time = cubeDefinitions.First().MaxIntegrity / cubeDefinitions.First().IntegrityPointsPerSec;
-            var _TimeSpan = TimeSpan.MinValue;
-            try {
-                _TimeSpan = TimeSpan.FromSeconds(_Time);
-            } catch {
-                _TimeSpan = TimeSpan.MaxValue;
-            }
-
             foreach (var cubeDefinition in cubeDefinitions)
             {
+                // Fixes "System.OverflowException: 'TimeSpan overflowed because the duration is too long.'"
+                var _Time = cubeDefinitions.First().MaxIntegrity / cubeDefinitions.First().IntegrityPointsPerSec;
+                var _TimeSpan = TimeSpan.MinValue;
+                try
+                {
+                    _TimeSpan = TimeSpan.FromSeconds(cubeDefinition.IntegrityPointsPerSec != 0 ? cubeDefinition.MaxIntegrity / cubeDefinition.IntegrityPointsPerSec : 0);
+                }
+                catch
+                {
+                    _TimeSpan = TimeSpan.MaxValue;
+                }
+
                 var c = new ComponentItemModel
                 {
                     Name = cubeDefinition.DisplayNameText,
@@ -93,7 +96,7 @@
                     TypeIdString = cubeDefinition.Id.TypeId.ToString(),
                     SubtypeId = cubeDefinition.Id.SubtypeName,
                     TextureFile = (cubeDefinition.Icons == null || cubeDefinition.Icons.First() == null) ? null : SpaceEngineersCore.GetDataPathOrDefault(cubeDefinition.Icons.First(), Path.Combine(contentPath, cubeDefinition.Icons.First())),
-                    Time = TimeSpan.FromSeconds(cubeDefinition.IntegrityPointsPerSec != 0 ? cubeDefinition.MaxIntegrity / cubeDefinition.IntegrityPointsPerSec : 0),
+                    Time = _TimeSpan,
                     Accessible = cubeDefinition.Public,
                     Mass = SpaceEngineersApi.FetchCubeBlockMass(cubeDefinition.Id.TypeId, cubeDefinition.CubeSize, cubeDefinition.Id.SubtypeName),
                     CubeSize = cubeDefinition.CubeSize,
